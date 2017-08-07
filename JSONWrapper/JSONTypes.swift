@@ -9,7 +9,7 @@
 import Foundation
 
 extension Dictionary {
-    func flatMapValues<T>(_ f: (Value) -> T?) -> [Key: T] {
+    fileprivate func flatMapValues<T>(_ f: (Value) -> T?) -> [Key: T] {
         var d: [Key: T] = [:]
         for (k, v) in self {
             if let newV = f(v) {
@@ -34,12 +34,12 @@ public enum JSONObject {
     case object([String: JSONValue])
     case array([JSONValue])
 
-    static func parse(fromString json: String) -> JSONObject? {
+    public static func parse(fromString json: String) -> JSONObject? {
         let any = Helper.bind({try? JSONSerialization.jsonObject(with: $0, options: [])})(json.data(using: .ascii))
         return Helper.bind(JSONObject.parse(fromAny: ))(any)
     }
 
-    static func parse(fromAny json: Any) -> JSONObject? {
+    public static func parse(fromAny json: Any) -> JSONObject? {
         switch json {
         case let obj as [String: Any]: return .object(obj.flatMapValues(JSONValue.parse(fromAny: )))
         case let arr as [Any]: return .array(arr.flatMap(JSONValue.parse(fromAny: )))
@@ -49,14 +49,14 @@ public enum JSONObject {
 }
 
 extension JSONObject {
-    var asObject: [String: JSONValue]? {
+    public var asObject: [String: JSONValue]? {
         switch self {
         case .object(let o): return o
         case _: return nil
         }
     }
 
-    var asArray: [JSONValue]? {
+    public var asArray: [JSONValue]? {
         switch self {
         case .array(let a): return a
         case _: return nil
@@ -90,12 +90,12 @@ public enum JSONValue {
     case object([String: JSONValue])
     case array([JSONValue])
 
-    static func parse(fromString json: String) -> JSONValue? {
+    public static func parse(fromString json: String) -> JSONValue? {
         let any = Helper.bind({try? JSONSerialization.jsonObject(with: $0, options: [])})(json.data(using: .ascii))
         return Helper.bind(parse(fromAny: ))(any)
     }
 
-    static func parse(fromAny json: Any) -> JSONValue? {
+    public static func parse(fromAny json: Any) -> JSONValue? {
         switch json {
         case let int as Int: return .int(int)
         case let str as String: return .string(str)
@@ -108,35 +108,35 @@ public enum JSONValue {
 }
 
 extension JSONValue {
-    var asBool: Bool? {
+    public var asBool: Bool? {
         switch self {
         case .bool(let b): return b
         case _: return nil
         }
     }
 
-    var asInt: Int? {
+    public var asInt: Int? {
         switch self {
         case .int(let i): return i
         case _: return nil
         }
     }
 
-    var asString: String? {
+    public var asString: String? {
         switch self {
         case .string(let s): return s
         case _: return nil
         }
     }
 
-    var asObject: [String: JSONValue]? {
+    public var asObject: [String: JSONValue]? {
         switch self {
         case .object(let o): return o
         case _: return nil
         }
     }
 
-    var asArray: [JSONValue]? {
+    public var asArray: [JSONValue]? {
         switch self {
         case .array(let a): return a
         case _: return nil
