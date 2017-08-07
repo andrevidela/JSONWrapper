@@ -12,6 +12,14 @@ import XCTest
 class JSONWrapperTests: XCTestCase {
 
 
+    func parseDataJSON() {
+        let json = "{\"age\": 18, \"key\": \"value\", \"bool\": false}"
+        let data = Data.init(base64Encoded: json)
+        let parsed = data.flatMap(JSONObject.parse(fromData: ))
+        guard let success = parsed else { XCTFail(); return }
+        XCTAssertEqual(JSONObject.object(["age": JSONValue.int(18), "key": JSONValue.string("value"), "bool": JSONValue.bool(false)]), success)
+    }
+
     func testParseEmptyArray() {
         let p = JSONObject.parse(fromString: "[]")
         XCTAssertNotNil(p)
