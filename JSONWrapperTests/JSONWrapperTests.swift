@@ -17,7 +17,7 @@ class JSONWrapperTests: XCTestCase {
         let data = Data.init(base64Encoded: json)
         let parsed = data.flatMap(JSONObject.parse(fromData: ))
         guard let success = parsed else { XCTFail(); return }
-        XCTAssertEqual(JSONObject.object(["age": JSONValue.int(18), "key": JSONValue.string("value"), "bool": JSONValue.bool(false)]), success)
+        XCTAssertEqual(JSONObject.object(["age": JSONValue.float(18), "key": JSONValue.string("value"), "bool": JSONValue.bool(false)]), success)
     }
 
     func testParseEmptyArray() {
@@ -58,7 +58,7 @@ class JSONWrapperTests: XCTestCase {
     func testHeterogenousArray() {
         let p = JSONObject.parse(fromString: "[true, false, 0, \"nothing\", {}, {\"key\": \"value\"}]")
         XCTAssertNotNil(p)
-        let ref: [JSONValue] = [.bool(true), .bool(false), .int(0), .string("nothing"), .object([:]), .object(["key": .string("value")])]
+        let ref: [JSONValue] = [.bool(true), .bool(false), .float(0), .string("nothing"), .object([:]), .object(["key": .string("value")])]
         if case .array(let a)? = p,
             a == ref {
             // ok
@@ -78,7 +78,14 @@ class JSONWrapperTests: XCTestCase {
         let p = JSONObject.parse(fromString: "{\"age\": 18}")
         XCTAssertNotNil(p)
         XCTAssertNotNil(p!.asObject)
-        XCTAssertEqual(p!.asObject!["age"]!, .int(18))
+        XCTAssertEqual(p!.asObject!["age"]!, .float(18))
+    }
+
+    func testFloatJSON() {
+        let p = JSONObject.parse(fromString: "{\"age\": 17.9}")
+        XCTAssertNotNil(p)
+        XCTAssertNotNil(p!.asObject)
+        XCTAssertEqual(p!.asObject!["age"]!, .float(17.9))
     }
 }
 

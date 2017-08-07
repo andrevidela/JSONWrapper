@@ -34,7 +34,7 @@ public enum JSONObject {
     case object([String: JSONValue])
     case array([JSONValue])
 
-    public static func parse(fromString json: String, using encoding: String.Encoding) -> JSONObject? {
+    public static func parse(fromString json: String, using encoding: String.Encoding = .ascii) -> JSONObject? {
         return Helper.bind(JSONObject.parse(fromData: ))(json.data(using: encoding))
     }
     public static func parse(fromData json: Data) -> JSONObject? {
@@ -87,7 +87,7 @@ extension JSONObject: CustomStringConvertible {
 
 public enum JSONValue {
     case bool(Bool)
-    case int(Int)
+    case float(Float)
     case string(String)
     case object([String: JSONValue])
     case array([JSONValue])
@@ -103,7 +103,7 @@ public enum JSONValue {
 
     public static func parse(fromAny json: Any) -> JSONValue? {
         switch json {
-        case let int as Int: return .int(int)
+        case let float as Float: return .float(float)
         case let str as String: return .string(str)
         case let obj as [String: Any]: return .object(obj.flatMapValues(JSONValue.parse(fromAny: )))
         case let arr as [Any]: return .array(arr.flatMap(JSONValue.parse(fromAny: )))
@@ -123,7 +123,14 @@ extension JSONValue {
 
     public var asInt: Int? {
         switch self {
-        case .int(let i): return i
+        case .float(let f): return Int(f)
+        case _: return nil
+        }
+    }
+
+    public var asFloat: Float? {
+        switch self {
+        case .float(let f): return f
         case _: return nil
         }
     }
@@ -154,7 +161,7 @@ extension JSONValue: Equatable {
     public static func == (lhs: JSONValue, rhs: JSONValue) -> Bool {
         switch (lhs, rhs) {
         case let (.bool(b1), .bool(b2)): return b1 == b2
-        case let (.int(i1), .int(i2)): return i1 == i2
+        case let (.float(f1), .float(f2)): return f1 == f2
         case let (.string(s1), .string(s2)): return s1 == s2
         case let (.array(a1), .array(a2)): return a1 == a2
         case let (.object(o1), .object(o2)): return o1 == o2
