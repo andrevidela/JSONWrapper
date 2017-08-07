@@ -34,8 +34,8 @@ public enum JSONObject {
     case object([String: JSONValue])
     case array([JSONValue])
 
-    public static func parse(fromString json: String) -> JSONObject? {
-        return Helper.bind(JSONObject.parse(fromData: ))(json.data(using: .ascii))
+    public static func parse(fromString json: String, using encoding: String.Encoding) -> JSONObject? {
+        return Helper.bind(JSONObject.parse(fromData: ))(json.data(using: encoding))
     }
     public static func parse(fromData json: Data) -> JSONObject? {
         let any = try? JSONSerialization.jsonObject(with: json, options: [])
@@ -92,13 +92,13 @@ public enum JSONValue {
     case object([String: JSONValue])
     case array([JSONValue])
 
+    public static func parse(fromString json: String, using encoding: String.Encoding = .ascii) -> JSONValue? {
+        return Helper.bind(parse(fromData: ))(json.data(using: encoding))
+    }
+
     public static func parse(fromData json: Data) -> JSONValue? {
         let any = try? JSONSerialization.jsonObject(with: json, options: [])
         return Helper.bind(parse(fromAny: ))(any)
-    }
-
-    public static func parse(fromString json: String) -> JSONValue? {
-        return Helper.bind(parse(fromData: ))(json.data(using: .ascii))
     }
 
     public static func parse(fromAny json: Any) -> JSONValue? {
