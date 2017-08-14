@@ -91,6 +91,7 @@ public enum JSONValue {
     case string(String)
     case object([String: JSONValue])
     case array([JSONValue])
+    case null
 
     public static func parse(fromString json: String, using encoding: String.Encoding = .ascii) -> JSONValue? {
         return Helper.bind(parse(fromData: ))(json.data(using: encoding))
@@ -165,7 +166,9 @@ extension JSONValue: Equatable {
         case let (.string(s1), .string(s2)): return s1 == s2
         case let (.array(a1), .array(a2)): return a1 == a2
         case let (.object(o1), .object(o2)): return o1 == o2
+        case (.null, .null): return true
         case _: return false
         }
     }
 }
+
