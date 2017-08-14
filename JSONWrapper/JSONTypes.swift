@@ -9,7 +9,7 @@
 import Foundation
 
 extension Dictionary {
-    fileprivate func flatMapValues<T>(_ f: (Value) -> T?) -> [Key: T] {
+    func flatMapValues<T>(_ f: (Value) -> T?) -> [Key: T] {
         var d: [Key: T] = [:]
         for (k, v) in self {
             if let newV = f(v) {
