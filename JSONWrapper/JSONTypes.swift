@@ -9,7 +9,7 @@
 import Foundation
 
 extension Dictionary {
-    fileprivate func flatMapValues<T>(_ f: (Value) -> T?) -> [Key: T] {
+    func flatMapValues<T>(_ f: (Value) -> T?) -> [Key: T] {
         var d: [Key: T] = [:]
         for (k, v) in self {
             if let newV = f(v) {
@@ -91,6 +91,7 @@ public enum JSONValue {
     case string(String)
     case object([String: JSONValue])
     case array([JSONValue])
+    case null
 
     public static func parse(fromString json: String, using encoding: String.Encoding = .ascii) -> JSONValue? {
         return Helper.bind(parse(fromData: ))(json.data(using: encoding))
@@ -165,7 +166,66 @@ extension JSONValue: Equatable {
         case let (.string(s1), .string(s2)): return s1 == s2
         case let (.array(a1), .array(a2)): return a1 == a2
         case let (.object(o1), .object(o2)): return o1 == o2
+        case (.null, .null): return true
         case _: return false
         }
+    }
+}
+
+// lol
+private func leftPad(_ str: String, count: Int, padding: String = " ") -> String {
+    return (0..<count).map { _ in padding }.joined() + str
+}
+
+private func arrayDecoration(lines: [String]) -> [String] {
+    var newLines: [String] = []
+
+    for (index, line) in lines.enumerated() {
+        if index == lines.count - 1 {
+            newLines.append("  \(line)")
+        } else {
+            newLines.append("  \(line),")
+        }
+    }
+    newLines.append("]")
+    return newLines
+}
+
+private func dictionaryDecoration(lines: [(String, String)]) -> [String] {
+    var newLines: [String] = []
+
+    for (index, (key, value)) in lines.enumerated() {
+        if index == lines.count - 1 {
+            newLines.append("  \"\(key)\": \(value)")
+        } else {
+            newLines.append("  \"\(key)\": \(value),")
+        }
+    }
+    newLines.append("}")
+    return newLines
+}
+
+public func prettyPrint(json: JSONValue, indentation: Int = 0, indentSize: Int = 2) -> String {
+    let padding = (0..<indentSize).map {_ in " "}.joined()
+    switch json {
+    case .string(let str): return "\"\(str)\""
+    case .bool(let b): return b.description
+    case .float(let f): return f.description
+    case .null: return "null"
+    case .array(let arr):
+        let s = arr.map({prettyPrint(json: $0, indentation: indentation + 1, indentSize: indentSize)})
+        return (["["] + arrayDecoration(lines: s).map {leftPad($0, count: 0, padding: padding)}).joined(separator: "\n")
+    case .object(let dict):
+
+        return (["{"] + dictionaryDecoration(lines: dict.map({(key, value) in (key, prettyPrint(json: value, indentation: indentation + 1))})).map {leftPad($0, count: indentation, padding: padding)}).joined(separator: "\n")
+    }
+}
+
+public func prettyPrint(json: JSONObject, indentation: Int = 0, indentSize: Int = 2) -> String {
+    switch json {
+    case .array(let array):
+        return prettyPrint(json: JSONValue.array(array), indentation: indentation, indentSize: indentSize)
+    case .object(let dict):
+        return prettyPrint(json: JSONValue.object(dict), indentation: indentation, indentSize: indentSize)
     }
 }
