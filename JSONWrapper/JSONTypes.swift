@@ -173,11 +173,11 @@ extension JSONValue: Equatable {
 }
 
 // lol
-func leftPad(_ str: String, count: Int, padding: String = " ") -> String {
+private func leftPad(_ str: String, count: Int, padding: String = " ") -> String {
     return (0..<count).map { _ in padding }.joined() + str
 }
 
-func arrayDecoration(lines: [String]) -> [String] {
+private func arrayDecoration(lines: [String]) -> [String] {
     var newLines: [String] = []
 
     for (index, line) in lines.enumerated() {
@@ -191,7 +191,7 @@ func arrayDecoration(lines: [String]) -> [String] {
     return newLines
 }
 
-func dictionaryDecoration(lines: [(String, String)]) -> [String] {
+private func dictionaryDecoration(lines: [(String, String)]) -> [String] {
     var newLines: [String] = []
 
     for (index, (key, value)) in lines.enumerated() {
@@ -205,7 +205,7 @@ func dictionaryDecoration(lines: [(String, String)]) -> [String] {
     return newLines
 }
 
-func prettyPrint(json: JSONValue, indentation: Int = 0, indentSize: Int = 2) -> String {
+public func prettyPrint(json: JSONValue, indentation: Int = 0, indentSize: Int = 2) -> String {
     let padding = (0..<indentSize).map {_ in " "}.joined()
     switch json {
     case .string(let str): return "\"\(str)\""
@@ -221,7 +221,7 @@ func prettyPrint(json: JSONValue, indentation: Int = 0, indentSize: Int = 2) -> 
     }
 }
 
-func prettyPrint(json: JSONObject, indentation: Int = 0, indentSize: Int = 2) -> String {
+public func prettyPrint(json: JSONObject, indentation: Int = 0, indentSize: Int = 2) -> String {
     switch json {
     case .array(let array):
         return prettyPrint(json: JSONValue.array(array), indentation: indentation, indentSize: indentSize)
