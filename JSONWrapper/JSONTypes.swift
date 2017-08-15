@@ -172,3 +172,60 @@ extension JSONValue: Equatable {
     }
 }
 
+// lol
+func leftPad(_ str: String, count: Int, padding: String = " ") -> String {
+    return (0..<count).map { _ in padding }.joined() + str
+}
+
+func arrayDecoration(lines: [String]) -> [String] {
+    var newLines: [String] = []
+
+    for (index, line) in lines.enumerated() {
+        if index == lines.count - 1 {
+            newLines.append("  \(line)")
+        } else {
+            newLines.append("  \(line),")
+        }
+    }
+    newLines.append("]")
+    return newLines
+}
+
+func dictionaryDecoration(lines: [(String, String)]) -> [String] {
+    var newLines: [String] = []
+
+    for (index, (key, value)) in lines.enumerated() {
+        if index == lines.count - 1 {
+            newLines.append("  \"\(key)\": \(value)")
+        } else {
+            newLines.append("  \"\(key)\": \(value),")
+        }
+    }
+    newLines.append("}")
+    return newLines
+}
+
+func prettyPrint(json: JSONValue, indentation: Int = 0, indentSize: Int = 2) -> String {
+    let padding = (0..<indentSize).map {_ in " "}.joined()
+    switch json {
+    case .string(let str): return "\"\(str)\""
+    case .bool(let b): return b.description
+    case .float(let f): return f.description
+    case .null: return "null"
+    case .array(let arr):
+        let s = arr.map({prettyPrint(json: $0, indentation: indentation + 1, indentSize: indentSize)})
+        return (["["] + arrayDecoration(lines: s).map {leftPad($0, count: 0, padding: padding)}).joined(separator: "\n")
+    case .object(let dict):
+
+        return (["{"] + dictionaryDecoration(lines: dict.map({(key, value) in (key, prettyPrint(json: value, indentation: indentation + 1))})).map {leftPad($0, count: indentation, padding: padding)}).joined(separator: "\n")
+    }
+}
+
+func prettyPrint(json: JSONObject, indentation: Int = 0, indentSize: Int = 2) -> String {
+    switch json {
+    case .array(let array):
+        return prettyPrint(json: JSONValue.array(array), indentation: indentation, indentSize: indentSize)
+    case .object(let dict):
+        return prettyPrint(json: JSONValue.object(dict), indentation: indentation, indentSize: indentSize)
+    }
+}

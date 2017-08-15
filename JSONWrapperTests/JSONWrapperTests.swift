@@ -16,9 +16,10 @@ struct Person {
 
 extension Person: JSONObjectParsable {
 
-    static func parse(json: [String: JSONValue]) -> Person? {
-        if case let .string(n)? = json["name"],
-            case let .float(a)? = json["age"] {
+    static func parse(object: JSONObject) -> Person? {
+        guard case .object(let dictionary) = object else { return nil }
+        if case let .string(n)? = dictionary["name"],
+            case let .float(a)? = dictionary["age"] {
             return Person(name: n, age: Int(a))
         } else { return nil }
     }
@@ -50,11 +51,13 @@ extension UserInfo: Equatable {
 }
 
 extension UserInfo: JSONObjectParsable {
-    static func parse(json: [String: JSONValue]) -> UserInfo? {
-        if let p = json["person"],
-            let a = json["address"],
-            let person = p.asObject.flatMap(Person.parse(json: )),
-            let address = a.asObject.flatMap(Address.parse(json: )) {
+    static func parse(object: JSONObject) -> UserInfo? {
+        guard case .object(let dictionary) = object else { return nil }
+
+        if let p = dictionary["person"],
+            let a = dictionary["address"],
+            let person = p.asObject.flatMap(Person.parse(dictionary: )),
+            let address = a.asObject.flatMap(Address.parse(dictionary: )) {
             return UserInfo(person: person, address: address(person.name))
         } else { return nil }
     }
@@ -79,9 +82,10 @@ extension Address: Equatable {
 }
 
 extension Address : JSONObjectParsable {
-    static func parse(json: [String : JSONValue]) -> ((String) -> Address)? {
-        if let street = json["street"]?.asString,
-            let coordinates = json["coordinates"]?.asObject.flatMap(Coordinates.parse(json: )) {
+    static func parse(object: JSONObject) -> ((String) -> Address)? {
+        guard case .object(let dictionary) = object else { return nil }
+        if let street = dictionary["street"]?.asString,
+            let coordinates = dictionary["coordinates"]?.asObject.flatMap(Coordinates.parse(dictionary: )) {
             return { (owner: String) -> Address in
                 Address(owner: owner, street: street, coordinates: coordinates)
             }
@@ -107,9 +111,10 @@ extension Coordinates: Equatable {
 }
 
 extension Coordinates: JSONObjectParsable {
-    static func parse(json: [String : JSONValue]) -> Coordinates? {
-        if let lat = json["latitude"]?.asFloat,
-            let lon = json["longitude"]?.asFloat {
+    static func parse(object: JSONObject) -> Coordinates? {
+        guard case .object(let dictionary) = object else { return nil }
+        if let lat = dictionary["latitude"]?.asFloat,
+            let lon = dictionary["longitude"]?.asFloat {
             return Coordinates(latitude: lat, longitude: lon)
         } else { return nil }
     }
@@ -199,16 +204,24 @@ class JSONWrapperTests: XCTestCase {
         XCTAssertNotNil(p!.asObject)
         XCTAssertEqual(p!.asObject!["age"]!, .float(17.9))
     }
+    let complexObject = UserInfo(person: Person(name: "me", age: 123), address: Address(owner: "me", street: "there", coordinates: Coordinates(latitude: 0.0, longitude: 1.0)))
 
     func testComplexObject() {
-        let complexObject = UserInfo(person: Person(name: "me", age: 123), address: Address(owner: "me", street: "there", coordinates: Coordinates(latitude: 0.0, longitude: 1.0)))
-        XCTAssertEqual(complexObject, UserInfo.parse(json: complexObject.asJSON))
+        XCTAssertEqual(complexObject, UserInfo.parse(object: complexObject.asJSON))
     }
 
     func testSimpleObject() {
 
         let simple = Person(name: "abaca", age: 12345)
-        XCTAssertEqual(simple, Person.parse(json: simple.asJSON)!)
+        XCTAssertEqual(simple, Person.parse(object: simple.asJSON)!)
+    }
+
+    func testPrinting() {
+        let json = ArrayOf<UserInfo>.toJSON([complexObject, complexObject])
+        let toprint = prettyPrint(json: json)
+        print(toprint)
+        let parsed = JSONObject.parse(fromString: toprint).flatMap(ArrayOf<UserInfo>.parse(object: )).flatMap(ArrayOf<UserInfo>.toJSON)
+        XCTAssertEqual(parsed!, json)
     }
 }
 

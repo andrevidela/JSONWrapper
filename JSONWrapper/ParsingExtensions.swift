@@ -59,63 +59,87 @@ extension JSONObjectConvertible {
 
 public protocol JSONValueParsable {
     associatedtype ParsedValue
-    static func parse(json: JSONValue) -> ParsedValue?
+    static func parse(value: JSONValue) -> ParsedValue?
 }
 
 extension String: JSONValueParsable {
-    public static func parse(json: JSONValue) -> String? {
-        return json.asString
+    public static func parse(value: JSONValue) -> String? {
+        return value.asString
     }
 }
 
 extension Int: JSONValueParsable {
-    public static func parse(json: JSONValue) -> Int? {
-        return json.asInt
+    public static func parse(value: JSONValue) -> Int? {
+        return value.asInt
     }
 }
 
 extension Float: JSONValueParsable {
-    public static func parse(json: JSONValue) -> Float? {
-        return json.asFloat
+    public static func parse(value: JSONValue) -> Float? {
+        return value.asFloat
     }
 }
 
 extension Bool: JSONValueParsable {
-    public static func parse(json: JSONValue) -> Bool? {
-        return json.asBool
+    public static func parse(value: JSONValue) -> Bool? {
+        return value.asBool
     }
 }
 
-public protocol JSONObjectParsable {
+public protocol JSONObjectParsable: JSONValueParsable {
     associatedtype ParsedValue
-    static func parse(json: [String: JSONValue]) -> ParsedValue?
-    static func parse(json: JSONObject) -> ParsedValue?
+    static func parse(object: JSONObject) -> ParsedValue?
 }
 
 extension JSONObjectParsable {
-    static func parse(json: JSONObject) -> ParsedValue? {
-        switch json {
-        case .object(let d): return Self.parse(json: d)
-        default: return nil
+    public static func parse(dictionary: [String: JSONValue]) -> ParsedValue? {
+        return Self.parse(object: .object(dictionary))
+    }
+
+    public static func parse(array: [JSONValue]) -> ParsedValue? {
+        return Self.parse(object: .array(array))
+    }
+
+    public static func parse(value: JSONValue) -> ParsedValue? {
+        switch value {
+        case .object(let obj): return Self.parse(object: .object(obj))
+        case .array(let arr): return Self.parse(object: .array(arr))
+        case _: return nil
         }
     }
 }
 
-extension Array {
-    static func parse<E: JSONValueParsable>(json: JSONObject) -> [E.ParsedValue]? {
-        switch json {
+public enum ArrayOf<E: JSONValueParsable> {
+    public static func parse(object: JSONObject) -> [E.ParsedValue]? {
+        switch object {
         case .array(let arr): return arr.flatMap(E.parse)
         default: return nil
         }
     }
+
+    public static func parse(value: JSONValue) -> [E.ParsedValue]? {
+        switch value {
+        case .array(let arr): return arr.flatMap(E.parse(value: ))
+        default: return nil
+        }
+    }
+
+    public static func toJSON<E: JSONValueConvertible>(_ array: [E]) -> JSONObject {
+        return .array(array.map(E.toJSON))
+    }
 }
 
 extension Dictionary {
-    static func parse<E: JSONValueParsable>(json: JSONObject) -> [String: E.ParsedValue]? {
-        switch json {
+    public static func parse<E: JSONValueParsable>(object: JSONObject) -> [String: E.ParsedValue]? {
+        switch object {
         case .object(let d):
-            return d.flatMapValues(E.parse(json:))
+            return d.flatMapValues(E.parse(value:))
         default: return nil
         }
+    }
+
+    public static func toJSON<E: JSONValueConvertible>(_ dict: [String: E]) -> JSONObject {
+        let fn: (E) -> JSONValue? = { e in e.asJSON }
+        return .object(dict.flatMapValues(fn))
     }
 }
