@@ -104,11 +104,11 @@ public enum JSONValue {
 
     public static func parse(fromAny json: Any) -> JSONValue? {
         switch json {
+        case let bool as Bool: return .bool(bool)
         case let float as Float: return .float(float)
         case let str as String: return .string(str)
         case let obj as [String: Any]: return .object(obj.flatMapValues(JSONValue.parse(fromAny: )))
         case let arr as [Any]: return .array(arr.flatMap(JSONValue.parse(fromAny: )))
-        case let bool as Bool: return .bool(bool)
         case _: return nil
         }
     }

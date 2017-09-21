@@ -87,7 +87,8 @@ extension Bool: JSONValueParsable {
 }
 
 public protocol JSONObjectParsable: JSONValueParsable {
-    associatedtype ParsedValue
+    associatedtype ParsedObject
+    typealias ParsedValue = ParsedObject
     static func parse(object: JSONObject) -> ParsedValue?
 }
 
@@ -129,11 +130,20 @@ public enum ArrayOf<E: JSONValueParsable> {
     }
 }
 
+public struct Workaround<T, U: JSONValueParsable> : JSONValueParsable where U.ParsedValue == T {
+    public typealias ParsedValue = T
+
+    public static func parse(value: JSONValue) -> ParsedValue? {
+        return U.parse(value: value)
+    }
+}
+
 extension Dictionary {
-    public static func parse<E: JSONValueParsable>(object: JSONObject) -> [String: E.ParsedValue]? {
+
+    public static func parse<T, U>(object: JSONObject, _ tpe: Workaround<T, U>.Type) -> [String: T]? {
         switch object {
         case .object(let d):
-            return d.flatMapValues(E.parse(value:))
+            return d.flatMapValues(tpe.parse(value:))
         default: return nil
         }
     }

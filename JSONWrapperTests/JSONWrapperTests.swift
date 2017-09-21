@@ -15,14 +15,16 @@ struct Person {
 }
 
 extension Person: JSONObjectParsable {
-
-    static func parse(object: JSONObject) -> Person? {
+    static func parse(object: JSONObject) -> Person.ParsedValue? {
         guard case .object(let dictionary) = object else { return nil }
         if case let .string(n)? = dictionary["name"],
             case let .float(a)? = dictionary["age"] {
             return Person(name: n, age: Int(a))
         } else { return nil }
     }
+
+    typealias ParsedValue = Person
+
 }
 
 extension Person: JSONObjectConvertible {
@@ -51,6 +53,8 @@ extension UserInfo: Equatable {
 }
 
 extension UserInfo: JSONObjectParsable {
+    typealias ParsedValue = UserInfo
+    
     static func parse(object: JSONObject) -> UserInfo? {
         guard case .object(let dictionary) = object else { return nil }
 
@@ -176,9 +180,8 @@ class JSONWrapperTests: XCTestCase {
         let p = JSONObject.parse(fromString: "[true, false, 0, \"nothing\", {}, {\"key\": \"value\"}]")
         XCTAssertNotNil(p)
         let ref: [JSONValue] = [.bool(true), .bool(false), .float(0), .string("nothing"), .object([:]), .object(["key": .string("value")])]
-        if case .array(let a)? = p,
-            a == ref {
-            // ok
+        if case .array(let a)? = p {
+            XCTAssertEqual(a, ref)
         } else {
             XCTFail(p!.description)
         }
